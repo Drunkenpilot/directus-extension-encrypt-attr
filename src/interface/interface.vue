@@ -43,6 +43,8 @@ const props = defineProps({
   },
 });
 
+console.log(props);
+
 const hidden = ref(true);
 
 const emit = defineEmits<{ input: [value: string] }>();

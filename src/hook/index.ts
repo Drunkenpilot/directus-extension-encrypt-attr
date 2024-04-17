@@ -1,5 +1,6 @@
 import { defineHook } from "@directus/extensions-sdk";
 import EA from "encrypted-attr";
+import * as MaskData from "maskdata";
 export default defineHook(
   ({ filter, action, init }, { env, services, getSchema }) => {
     const totalEncryptionFields: { [key: string]: string[] } = {};
@@ -96,8 +97,11 @@ export default defineHook(
         for (const field of (totalEncryptionFields as any)[collection])
           for (let i = 0; i < payload.length; i++) {
             const item = payload[i];
-            if (item[field] != null && item[field].length > 0)
-              payload[i][field] = decrypt(item[field], [field], encryptedKeys);
+            if (item[field] != null && item[field].length > 0) {
+              const data = decrypt(item[field], [field], encryptedKeys);
+              payload[i][field] = maskSecret(data);
+              console.log(payload[i][field]);
+            }
           }
     });
 
@@ -115,12 +119,12 @@ export default defineHook(
             );
     });
 
-    const encrypt = (
+    function encrypt(
       text: string,
       attributes: string[],
       keys: Record<string, string>,
       keyId = "default"
-    ): Promise<string> => {
+    ): Promise<string> {
       const encryptedAttributes = EA(attributes, {
         keys,
         keyId,
@@ -132,17 +136,30 @@ export default defineHook(
       );
 
       return encryptedSecret;
-    };
+    }
 
-    const decrypt = (
+    function decrypt(
       encryptedText: string,
       attributes: string[],
       keys: Record<string, string>
-    ) => {
+    ) {
       const decryptedButStillJsonEncoded = EA(attributes, {
         keys,
       }).decryptAttribute(undefined, encryptedText);
       return JSON.parse(decryptedButStillJsonEncoded);
-    };
+    }
+
+    function maskSecret(secret: string) {
+      console.log(secret);
+
+      const maskPasswordOptions = {
+        maskWith: "*",
+        maxMaskedCharacters: 100, // To limit the output String length to 20.
+        unmaskedStartCharacters: 1,
+        unmaskedEndCharacters: 1, // As last 9 characters of the secret key is a meta info which can be printed for debugging or other purpose
+      };
+      const maskedPassword = MaskData.maskPassword(secret, maskPasswordOptions);
+      return maskedPassword;
+    }
   }
 );
