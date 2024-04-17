@@ -6,17 +6,24 @@
     @change="handleChange(($event.target as HTMLInputElement).value)"
     :suffix="hidden ? 'masked' : 'visible'"
   />
-  <VCheckbox
-    :model-value="hidden"
-    @update:modelValue="hidden = $event"
-    @click="onTypeChange"
+
+  <VButton
+    style="margin-top: 5px"
+    @click="onTypeChange()"
+    :xSmall="true"
+    :outlined="true"
+    :danger="hidden"
   >
-    {{ hidden ? "Show data" : "Hide data" }}
-  </VCheckbox>
+    <VIcon
+      :name="hidden ? 'visibility_off' : 'visibility'"
+      style="margin-right: 5px"
+    />
+    {{ hidden ? "Show Data" : "Hide Data" }}
+  </VButton>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch } from "vue";
+import { ref } from "vue";
 const props = defineProps({
   value: {
     type: String,
@@ -43,7 +50,7 @@ function handleChange(value: string): void {
   emit("input", value);
 }
 
-function onTypeChange(value: any) {
-  // console.log(hidden.value);
+function onTypeChange() {
+  hidden.value = !hidden.value;
 }
 </script>

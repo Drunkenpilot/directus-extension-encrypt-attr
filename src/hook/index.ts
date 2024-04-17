@@ -1,79 +1,148 @@
 import { defineHook } from "@directus/extensions-sdk";
-
+import EA from "encrypted-attr";
 export default defineHook(
-  ({ filter, action }, { env, services, getSchema }) => {
+  ({ filter, action, init }, { env, services, getSchema }) => {
     const totalEncryptionFields: { [key: string]: string[] } = {};
+    const interfaceKeys = ["encrypted-input"];
+    const encryptedKeys = env.EA_KEYS;
+    const encryptedDefaultId = env.EA_DEFAULT_ID;
 
-    if (typeof env.DE_ENCRYPTION === "string") {
-      const [collection, field] = env.DE_ENCRYPTION.split(".");
-      if (collection && field) totalEncryptionFields[collection] = [field];
-    }
-
-    if (Array.isArray(env.DE_ENCRYPTION)) {
-      for (const item of env.DE_ENCRYPTION) {
-        const [collection, field] = item.split(".");
-        if (collection && field) totalEncryptionFields[collection]?.push(field);
-      }
-    }
-
-    filter("items.update", async (payload: any, meta, context) => {
-      const { collection } = meta;
-      const { FieldsService } = services;
-      const fieldsService = new FieldsService("directus_fields", {
-        schema: context.schema,
-        accountability: context.accountability,
-      });
-
-      const data = await fieldsService.readAll(collection);
-      console.log(data);
-
-      console.log(meta);
-      console.log(payload);
-
-      console.log(context.schema?.collections.directus_fields);
-
-      if (totalEncryptionFields[collection] != null)
-        console.log(totalEncryptionFields[collection]);
-
-      //    for (const field of (totalEncryptionFields as any)[collection])
-      //      if (payload[field] != null && payload[field].length > 0)
-      //        payload[field] = encrypt(payload[field], env.DE_KEY);
-    });
-
-    filter("items.read", async (payload: any, meta, context) => {
-      const { collection } = meta;
-      console.log(collection);
-
-      const { FieldsService } = services;
-
+    init("app.after", async () => {
+      const { ItemsService } = services;
       try {
-        const fieldsService = new FieldsService("directus_fields", {
+        const itemService = new ItemsService("directus_fields", {
           schema: await getSchema(),
-          accountability: context.accountability,
         });
-        console.log(fieldsService.itemsService.where(""));
+
+        const items = await itemService.readByQuery({
+          filter: {
+            interface: {
+              _in: interfaceKeys,
+            },
+          },
+        });
+
+        for (const item of items) {
+          if (!totalEncryptionFields[item.collection])
+            totalEncryptionFields[item.collection] = [];
+
+          totalEncryptionFields[item.collection]?.push(item.field);
+        }
       } catch (err) {
         console.log(err);
       }
-      // const fieldsService = new FieldsService("directus_fields", {
-      //   schema: await getSchema(),
-      //   accountability: context.accountability,
-      // });
-
-      // const data = await fieldsService.readAll(collection);
-      // console.log(data);
-
-      //    for (const field of (totalEncryptionFields as any)[collection])
-      //      if (payload[field] != null && payload[field].length > 0)
-      //        payload[field] = encrypt(payload[field], env.DE_KEY);
     });
 
-    filter("items.create", () => {
-      console.log("Creating Item!");
+    action("fields.create", async (meta) => {
+      const { payload, collection } = meta;
+
+      if (interfaceKeys.includes(payload.meta.interface)) {
+        if (totalEncryptionFields[collection] !== null)
+          totalEncryptionFields[collection]?.push(payload.field);
+        if (!totalEncryptionFields[collection])
+          totalEncryptionFields[collection] = [payload.field];
+      }
+    });
+    action("fields.update", async (meta) => {
+      const { payload, collection } = meta;
+
+      if (
+        totalEncryptionFields[collection]?.includes(payload.field) &&
+        !interfaceKeys.includes(payload.meta.interface)
+      ) {
+        totalEncryptionFields[collection] =
+          totalEncryptionFields[collection]?.filter(
+            (key) => key !== payload.field
+          ) ?? [];
+      }
+
+      if (
+        interfaceKeys.includes(payload.meta.interface) &&
+        !totalEncryptionFields[collection]?.includes(payload.field)
+      ) {
+        if (totalEncryptionFields[collection] !== null)
+          totalEncryptionFields[collection]?.push(payload.field);
+        if (!totalEncryptionFields[collection])
+          totalEncryptionFields[collection] = [payload.field];
+      }
     });
 
-    action("items.create", () => {
-      console.log("Item created!");
+    action("fields.delete", async (meta) => {
+      const { payload, collection } = meta;
+      if (totalEncryptionFields[collection]?.includes(payload[0])) {
+        totalEncryptionFields[collection] =
+          totalEncryptionFields[collection]?.filter(
+            (key) => key !== payload[0]
+          ) ?? [];
+      }
     });
+
+    filter("items.update", async (payload: any, meta) => {
+      const { collection } = meta;
+
+      if (totalEncryptionFields[collection] != null)
+        for (const field of (totalEncryptionFields as any)[collection])
+          if (payload[field] != null && payload[field].length > 0)
+            payload[field] = encrypt(
+              payload[field],
+              [field],
+              encryptedKeys,
+              encryptedDefaultId
+            );
+    });
+
+    action("items.read", async ({ payload, collection }) => {
+      if (totalEncryptionFields[collection] != null)
+        for (const field of (totalEncryptionFields as any)[collection])
+          for (let i = 0; i < payload.length; i++) {
+            const item = payload[i];
+            if (item[field] != null && item[field].length > 0)
+              payload[i][field] = decrypt(item[field], [field], encryptedKeys);
+          }
+    });
+
+    filter("items.create", async (payload: any, meta) => {
+      const { collection } = meta;
+
+      if (totalEncryptionFields[collection] != null)
+        for (const field of (totalEncryptionFields as any)[collection])
+          if (payload[field] != null && payload[field].length > 0)
+            payload[field] = encrypt(
+              payload[field],
+              [field],
+              encryptedKeys,
+              encryptedDefaultId
+            );
+    });
+
+    const encrypt = (
+      text: string,
+      attributes: string[],
+      keys: Record<string, string>,
+      keyId = "default"
+    ): Promise<string> => {
+      const encryptedAttributes = EA(attributes, {
+        keys,
+        keyId,
+      });
+
+      const encryptedSecret = encryptedAttributes.encryptAttribute(
+        undefined,
+        JSON.stringify(text)
+      );
+
+      return encryptedSecret;
+    };
+
+    const decrypt = (
+      encryptedText: string,
+      attributes: string[],
+      keys: Record<string, string>
+    ) => {
+      const decryptedButStillJsonEncoded = EA(attributes, {
+        keys,
+      }).decryptAttribute(undefined, encryptedText);
+      return JSON.parse(decryptedButStillJsonEncoded);
+    };
   }
 );
