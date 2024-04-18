@@ -1,6 +1,6 @@
 import { defineHook } from "@directus/extensions-sdk";
+
 import EA from "encrypted-attr";
-import * as MaskData from "maskdata";
 export default defineHook(
   ({ filter, action, init }, { env, services, getSchema }) => {
     const totalEncryptionFields: { [key: string]: string[] } = {};
@@ -99,8 +99,7 @@ export default defineHook(
             const item = payload[i];
             if (item[field] != null && item[field].length > 0) {
               const data = decrypt(item[field], [field], encryptedKeys);
-              payload[i][field] = maskSecret(data);
-              console.log(payload[i][field]);
+              payload[i][field] = data;
             }
           }
     });
@@ -147,19 +146,6 @@ export default defineHook(
         keys,
       }).decryptAttribute(undefined, encryptedText);
       return JSON.parse(decryptedButStillJsonEncoded);
-    }
-
-    function maskSecret(secret: string) {
-      console.log(secret);
-
-      const maskPasswordOptions = {
-        maskWith: "*",
-        maxMaskedCharacters: 100, // To limit the output String length to 20.
-        unmaskedStartCharacters: 1,
-        unmaskedEndCharacters: 1, // As last 9 characters of the secret key is a meta info which can be printed for debugging or other purpose
-      };
-      const maskedPassword = MaskData.maskPassword(secret, maskPasswordOptions);
-      return maskedPassword;
     }
   }
 );

@@ -21,38 +21,39 @@
     {{ hidden ? "Show Data" : "Hide Data" }}
   </VButton>
 </template>
-
-<script lang="ts" setup>
+<script lang="ts">
 import { ref } from "vue";
-const props = defineProps({
-  value: {
-    type: String,
-    default: null,
-  },
-  collection: {
-    type: String,
-    default: null,
-  },
-  field: {
-    type: String,
-    default: null,
-  },
-  primaryKey: {
-    type: String,
-    default: null,
-  },
-});
 
-console.log(props);
+export default {
+  props: {
+    value: {
+      type: String,
+      default: null,
+    },
+    collection: {
+      type: String,
+      default: null,
+    },
+    field: {
+      type: String,
+      default: null,
+    },
+    primaryKey: {
+      type: String,
+      default: null,
+    },
+  },
+  emits: ["input"],
+  setup(props, { emit }) {
+    const hidden = ref(true);
+    function handleChange(value: string): void {
+      emit("input", value);
+    }
 
-const hidden = ref(true);
-
-const emit = defineEmits<{ input: [value: string] }>();
-function handleChange(value: string): void {
-  emit("input", value);
-}
-
-function onTypeChange() {
-  hidden.value = !hidden.value;
-}
+    function onTypeChange() {
+      hidden.value = !hidden.value;
+    }
+    return { hidden, onTypeChange, handleChange };
+  },
+};
 </script>
