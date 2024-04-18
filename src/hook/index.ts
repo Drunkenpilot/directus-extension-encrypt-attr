@@ -6,7 +6,8 @@ export default defineHook(
     const totalEncryptionFields: { [key: string]: string[] } = {};
     const interfaceKeys = ["encrypted-input"];
     const encryptedKeys = env.EA_KEYS;
-    const encryptedDefaultId = env.EA_DEFAULT_ID;
+    const encryptedKeyId = env.EA_KEY_ID;
+    const encryptedVerifyId = env.EA_VERIFY_ID;
 
     init("app.after", async () => {
       const { ItemsService } = services;
@@ -88,7 +89,8 @@ export default defineHook(
               payload[field],
               [field],
               encryptedKeys,
-              encryptedDefaultId
+              encryptedKeyId,
+              encryptedVerifyId
             );
     });
 
@@ -114,7 +116,8 @@ export default defineHook(
               payload[field],
               [field],
               encryptedKeys,
-              encryptedDefaultId
+              encryptedKeyId,
+              encryptedVerifyId
             );
     });
 
@@ -122,11 +125,13 @@ export default defineHook(
       text: string,
       attributes: string[],
       keys: Record<string, string>,
-      keyId = "default"
+      keyId = "default",
+      verifyId?: string
     ): Promise<string> {
       const encryptedAttributes = EA(attributes, {
         keys,
         keyId,
+        verifyId,
       });
 
       const encryptedSecret = encryptedAttributes.encryptAttribute(
