@@ -3,7 +3,7 @@ import InterfaceComponent from "./interface.vue";
 
 export default defineInterface({
   id: "encrypted-input",
-  name: "Encryption input",
+  name: "Encryption Input",
   icon: "lock",
   description: "This is an input for data encryption ",
   component: InterfaceComponent,
