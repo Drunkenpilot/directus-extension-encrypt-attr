@@ -4,6 +4,11 @@ Get more details on encrypt-attr
 https://github.com/simonratner/node-encrypted-attr
 https://www.npmjs.com/package/encrypted-attr
 
+
+![intro 3](https://raw.githubusercontent.com/Drunkenpilot/directus-extension-encrypt-attr/main/Documents/intro-3.png)
+![intro 4](https://raw.githubusercontent.com/Drunkenpilot/directus-extension-encrypt-attr/main/Documents/intro-4.png)
+
+
 #### Install extension package
 
 ```dotnetcli
@@ -29,7 +34,6 @@ All keys should be 32 bytes long, and cryptographically random. Manage these key
 
 #### Threat model
 This is designed to protect you from leaking sensitive user data under very specific scenarios:
-
  - Full data dump
     - Misplaced unencrypted backups
     - Compromised database host
@@ -40,11 +44,11 @@ This is designed to protect you from leaking sensitive user data under very spec
 
 #### Interface: Encryption input
 Add a new field with "Encryption Input" 
-
+![intro 1](https://raw.githubusercontent.com/Drunkenpilot/directus-extension-encrypt-attr/main/Documents/intro-1.png)
 #### Display: Hide the real value
 To hide the real value in item list
 In "Display", choose "Formatted Value", then Check "Masked" 
-
+![intro 2](https://raw.githubusercontent.com/Drunkenpilot/directus-extension-encrypt-attr/main/Documents/intro-2.png)
 
 #### Issues
 https://github.com/Drunkenpilot/directus-extension-encrypt-attr/issues
