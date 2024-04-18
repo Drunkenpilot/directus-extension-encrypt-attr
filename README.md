@@ -1,12 +1,14 @@
 ## Directus Extension Encrypt Attr
 ### A directus extension to implement encrypt-attr
 Get more details on encrypt-attr
-https://github.com/simonratner/node-encrypted-attr
-https://www.npmjs.com/package/encrypted-attr
+- https://github.com/simonratner/node-encrypted-attr
+- https://www.npmjs.com/package/encrypted-attr
+
 
 
 ![intro 3](https://raw.githubusercontent.com/Drunkenpilot/directus-extension-encrypt-attr/main/Documents/intro-3.png)
-![intro 4](https://raw.githubusercontent.com/Drunkenpilot/directus-extension-encrypt-attr/main/Documents/intro-4.png)
+
+![intro 5](https://raw.githubusercontent.com/Drunkenpilot/directus-extension-encrypt-attr/main/Documents/intro-5.png)
 
 
 #### Install extension package
@@ -44,10 +46,14 @@ This is designed to protect you from leaking sensitive user data under very spec
 
 #### Interface: Encryption input
 Add a new field with "Encryption Input" 
+
 ![intro 1](https://raw.githubusercontent.com/Drunkenpilot/directus-extension-encrypt-attr/main/Documents/intro-1.png)
 #### Display: Hide the real value
 To hide the real value in item list
 In "Display", choose "Formatted Value", then Check "Masked" 
+
+![intro 4](https://raw.githubusercontent.com/Drunkenpilot/directus-extension-encrypt-attr/main/Documents/intro-4.png)
+
 ![intro 2](https://raw.githubusercontent.com/Drunkenpilot/directus-extension-encrypt-attr/main/Documents/intro-2.png)
 
 #### Issues
